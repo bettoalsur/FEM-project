@@ -1,26 +1,50 @@
 
-let mesh = createMesh(10,1,20,2)
-let coor = new Matrix(4,2);
-coor.vals = [0,0, mesh.l,0, mesh.l,mesh.h, 0,mesh.h];
+let mesh = createMesh(4,2,30,10);
 
-let E0 = 200e9;
-let v = 0.3;
-let E = ElasticMaterialMatrix(E0,v);
-let Ke = ElementStiffnessMatrix(coor);
 
-let F = new Matrix(8,1);
-F.set(6,1,-13e6);
 
-[1,2,7,8].forEach(dof => {
-    for(let i = 0; i < 8 ; i++) {
-        let row = (dof-1)*8 + i;
-        let col = i*8 + (dof-1);
-        Ke.vals[row] = 0;
-        Ke.vals[col] = 0;
-    }
-    Ke.vals[(dof-1)*(8+1)]=1;
-})
+let E = elasticMaterialMatrix({
+    E0: 200e9,
+    v : 0.3
+},"stress");
 
-let U = Ke.solve(F);
-U.disp();
+let Ke = elementStiffnessMatrix();
+let Kg = globalStiffnessMatrix();
 
+let Kgm = applyBoundaryConditions({
+    dofx: [0,mesh.nodx-1],
+    dofy: [0,mesh.nodx-1]
+});
+
+let Fx = [];
+let Fy = [];
+let F = new Matrix(mesh.ndof,1);
+// F.set(11*2+2,1,-13e6);
+F.set(mesh.ndof-2*mesh.nelx/2,1,-13e6);
+// F.set(13*2+2,1,-13e6);
+
+let U = Kgm.solve(F);
+
+function setup() {
+    let tol = 50;
+    let fact = 5e1;
+    createCanvas(window.innerWidth, window.innerHeight);
+    background(25);
+    mesh.x.forEach((x,index) => {
+        strokeWeight(2);
+
+        let xp = map(x,0,mesh.L,tol,width-tol);
+        let yp = map(mesh.y[index],0,mesh.H,height-tol,tol);
+        stroke(255);
+        point(xp,yp);
+        
+        let xpf = map(x+fact*U.vals[index*2],0,mesh.L,tol,width-tol);
+        let ypf = map(mesh.y[index]+fact*U.vals[index*2+1],0,mesh.H,height-tol,tol);
+        stroke(255,100,100);
+        point(xpf,ypf);
+        
+        fill(255);
+        noStroke();
+        //text(index,xp+5,yp);
+    });
+}
