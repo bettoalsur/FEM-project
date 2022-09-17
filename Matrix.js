@@ -2,31 +2,43 @@ class Matrix {
     constructor(rows,cols) {
         this.rows = rows;
         this.cols = cols;
-        this.vals = [];
-        for (let i = 0 ; i < this.rows*this.cols ; i++) {
-            this.vals.push(0);
-        }
+        this.vals = new Array(rows*cols);
+        for(let i = 0; i < this.vals.length; i++) this.vals[i] = 0;
     }
 
     disp() {
         console.log("[ ]:");
-        for (let i = 0 ; i < this.rows ; i++) {
-            let row = [];
-            for (let j = 0 ; j < this.cols ; j++) {
-                let index = i*this.cols + j;
-                row.push(this.vals[index]);
-            }
-            console.log(row);
-        }
+        for(let i = 0; i < this.rows; i++) console.log(this.vals.slice(i*this.cols,(i+1)*this.cols));
     }
 
     set(row,col,val) {
-        if (row >= 0 && row <= this.rows && col >= 0 && col <= this.cols) {
-            let index = (row-1)*(this.cols) + (col-1);
-            this.vals[index] = val;
-        } else {
+        if (row <= 0 || row > this.rows || col <= 0 || col > this.cols) {
             console.log("position out of range");
+            return;
         }
+        let index = (row-1)*(this.cols) + (col-1);
+        this.vals[index] = val;
+    }
+
+    transpose() {
+        let C = new Matrix(this.cols,this.rows);
+        let indexC = 0;
+        for (let i = 0 ; i < this.cols ; i++) {
+            for (let j = 0; j < this.rows ; j++) {
+                let indexA = j*this.cols + i;
+                C.vals[indexC] = this.vals[indexA];
+                indexC++;
+            }
+        }
+        return C;
+    }
+
+    determinant() {
+        if (this.rows != this.cols ) {
+            console.log("Matrix must be square");
+            return;
+        }
+        return this.vals[0]*this.vals[3]-this.vals[1]*this.vals[2];
     }
 
     add(B) {
@@ -44,10 +56,9 @@ class Matrix {
             return;
         }
         let C = new Matrix(this.rows,this.cols);
-        let size = this.rows*this.cols;
-        for (let i = 0 ; i < size ; i++) {
-            C.vals[i] = this.vals[i] + B.vals[i];
-        }
+        this.vals.forEach((val,index) => {
+            C.vals[index] = val + B.vals[index];
+        });
         return C;
     }
 
@@ -135,30 +146,35 @@ class Matrix {
             console.log("sizes are inconsistent");
             return;
         }
-        if (b.cols != 1) {
-            console.log("input is not a vector");
-            return;
-        } // must be removed in future
         let res = this.LU();
         let L = res.L;
         let U = res.U;
-        let size = b.rows;
-        let y = [];
-        let x = [];
-        for (let k = 0 ; k < size ; k++ ) {
-            y[k] = b.vals[k];
-            for (let i = 0 ; i < k ; i++ ) {
-                y[k] -= L.vals[k*size + i]*y[i];
-            }
+        let bCopy = b.transpose();
+        let ans = [];
+        for (let i = 0 ; i < bCopy.rows ; i++) {
+            let vec = bCopy.vals.slice(i*bCopy.cols,(i+1)*bCopy.cols);
+            ans = ans.concat(solveLinear(L,U,vec));
         }
-        for (let k = size - 1 ; k>= 0 ; k--) {
-            for (let i = k+1 ; i < size ; i++) {
-                y[k] -= x[i]*U.vals[k*size + i];
-            }
-            x[k] = y[k] / U.vals[k*size + k];
-        }
-        let C = new Matrix(size,1);
-        C.vals = x;
-        return C;
+        bCopy.vals = ans;
+        return bCopy.transpose();
     }
+}
+
+function solveLinear(L,U,vec) {
+    let size = vec.length;
+    let y = [];
+    let x = [];
+    for (let k = 0 ; k < size ; k++ ) {
+        y[k] = vec[k];
+        for (let i = 0 ; i < k ; i++ ) {
+            y[k] -= L.vals[k*size + i]*y[i];
+        }
+    }
+    for (let k = size - 1 ; k >= 0 ; k--) {
+        for (let i = k+1 ; i < size ; i++) {
+            y[k] -= x[i]*U.vals[k*size + i];
+        }
+        x[k] = y[k] / U.vals[k*size + k];
+    }
+    return x;
 }

@@ -1,13 +1,26 @@
 
-let A = new Matrix(4,4);
-A.vals = [-1,-1,6,9,-5,5,-3,6,7,-3,5,-6,3,-3,-3,3];
-A.disp();
+let mesh = createMesh(10,1,20,2)
+let coor = new Matrix(4,2);
+coor.vals = [0,0, mesh.l,0, mesh.l,mesh.h, 0,mesh.h];
 
-let b = new Matrix(4,1);
-b.vals = [-29,-54,38,41];
-b.disp()
+let E0 = 200e9;
+let v = 0.3;
+let E = ElasticMaterialMatrix(E0,v);
+let Ke = ElementStiffnessMatrix(coor);
 
-let C = A.solve(b);
-C.disp();
+let F = new Matrix(8,1);
+F.set(6,1,-13e6);
 
-A.mult(C).disp();
+[1,2,7,8].forEach(dof => {
+    for(let i = 0; i < 8 ; i++) {
+        let row = (dof-1)*8 + i;
+        let col = i*8 + (dof-1);
+        Ke.vals[row] = 0;
+        Ke.vals[col] = 0;
+    }
+    Ke.vals[(dof-1)*(8+1)]=1;
+})
+
+let U = Ke.solve(F);
+U.disp();
+
