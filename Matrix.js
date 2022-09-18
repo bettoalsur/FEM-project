@@ -38,7 +38,18 @@ class Matrix {
             console.log("Matrix must be square");
             return;
         }
-        return this.vals[0]*this.vals[3]-this.vals[1]*this.vals[2];
+        let size = this.rows;
+        if (size == 1) return this.vals[0];
+        if (size == 2) return this.vals[0]*this.vals[3]-this.vals[1]*this.vals[2];
+        let sign = 1;
+        let result = 0;
+        for (let k = 0 ; k < size ; k++){
+            let cofactors = new Matrix(size-1,size-1);
+            cofactors.vals = this.vals.slice(size,size*size).filter((_,index)=>index%size!=k);
+            result += sign * this.vals[k] * cofactors.determinant();
+            sign*=(-1);
+        }
+        return result;
     }
 
     add(B) {

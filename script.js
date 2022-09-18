@@ -1,7 +1,5 @@
 
-let mesh = createMesh(4,2,30,10);
-
-
+let mesh = createMesh(4,2,4,2);
 
 let E = elasticMaterialMatrix({
     E0: 200e9,
