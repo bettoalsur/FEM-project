@@ -10,23 +10,34 @@ function viewMesh() {
     createMargins();
     let l = (margins[2]-margins[0])/mesh.nelx;
     let h = (margins[1]-margins[3])/mesh.nely;
-    for (let row = 0 ; row < mesh.con.rows ; row++) {
-        let elements = mesh.con.vals.slice(row*4,(row+1)*4);
-        let xp = map(mesh.x[elements[3]],0,mesh.L,margins[0],margins[2]);
-        let yp = map(mesh.y[elements[3]],0,mesh.H,margins[1],margins[3]);
-        rect(xp,yp,l,h);
-    }
+    mesh.con.vals.forEach((nod,index)=>{
+        if (index%4==3) {
+            let xp = map(mesh.x[nod],0,mesh.L,margins[0],margins[2]);
+            let yp = map(mesh.y[nod],0,mesh.H,margins[1],margins[3]);
+            rect(xp,yp,l,h);
+        }
+    });
+}
+
+function viewMargins() {
+    let margin = minMargin - 5;
+    noFill();
+    stroke(255);
+    strokeWeight(1);
+    rect(margin,margin,width-2*margin,height-2*margin);
 }
 
 function createMargins() {
-    if (mesh.L > mesh.H) {
+    let marginY = height/2 - (mesh.H/mesh.L)*(width -2*minMargin)/2;
+    let marginX = width/2  - (mesh.L/mesh.H)*(height-2*minMargin)/2
+    if (marginY > minMargin || marginX < minMargin) {
         margins[0] = minMargin;
         margins[2] = width - minMargin;
-        margins[1] = height/2 + (mesh.H/mesh.L)*(width-2*minMargin)/2;
-        margins[3] = height/2 - (mesh.H/mesh.L)*(width-2*minMargin)/2;
+        margins[1] = height - marginY;
+        margins[3] = marginY;
     } else {
-        margins[0] = width/2 - (mesh.L/mesh.H)*(height-2*minMargin)/2;
-        margins[2] = width/2 + (mesh.L/mesh.H)*(height-2*minMargin)/2;
+        margins[0] = marginX;
+        margins[2] = width - marginX;
         margins[1] = height - minMargin;
         margins[3] = minMargin;
     }
