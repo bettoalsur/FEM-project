@@ -160,14 +160,18 @@ class Matrix {
         let res = this.LU();
         let L = res.L;
         let U = res.U;
-        let bCopy = b.transpose();
-        let ans = [];
-        for (let i = 0 ; i < bCopy.rows ; i++) {
-            let vec = bCopy.vals.slice(i*bCopy.cols,(i+1)*bCopy.cols);
-            ans = ans.concat(solveLinear(L,U,vec));
+        let result = new Matrix(b.rows,b.cols);
+        if (b.cols == 1) {
+            result.vals = solveLinear(L,U,b.vals);
+            return result;
         }
-        bCopy.vals = ans;
-        return bCopy.transpose();
+        for (let i = 0 ; i < b.cols ; i++) {
+            let vec = b.vals.filter((_,index)=>index%b.cols==i);
+            solveLinear(L,U,vec).forEach((val,index)=>{
+                result.vals[index*b.cols + i] = val;
+            });
+        }
+        return result;
     }
 }
 
