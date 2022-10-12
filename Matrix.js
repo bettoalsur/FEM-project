@@ -44,9 +44,11 @@ class Matrix {
         let sign = 1;
         let result = 0;
         for (let k = 0 ; k < size ; k++){
-            let cofactors = new Matrix(size-1,size-1);
-            cofactors.vals = this.vals.slice(size,size*size).filter((_,index)=>index%size!=k);
-            result += sign * this.vals[k] * cofactors.determinant();
+            if (this.vals[k] != 0) {
+                let cofactors = new Matrix(size-1,size-1);
+                cofactors.vals = this.vals.slice(size,size*size).filter((_,index)=>index%size!=k);
+                result += sign * this.vals[k] * cofactors.determinant();
+            }
             sign*=(-1);
         }
         return result;
